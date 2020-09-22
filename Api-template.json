@@ -1,0 +1,230 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "serverfarms_consumption_name": {
+            "type": "string",
+            "metadata": {
+                "description":"The name of app service consumption plan"
+            }
+        },
+        "func_app_insights_name": {
+            "type":"string",
+            "metadata": {
+                "description":"The name of the function application insights"
+            }
+        },
+        "sales_func_app_name": {
+            "type":"string",
+            "metadata": {
+                "description":"The name of the sales function application"
+            }
+        },
+        "production_func_app_name": {
+            "type":"string",
+            "metadata": {
+                "description":"The name of the production function application"
+            }
+        },
+        "storage_acct_name": {
+            "type":"string",
+            "metadata": {
+                "description":"The name of the storage account you want to use with the function app"
+            }
+        }
+    },
+    "variables": { },
+    "resources": [
+        {
+            "comments": "Storage account for functions",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2019-04-01",
+            "name": "[parameters('storage_acct_name')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "Storage",
+            "properties": {
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [],
+                    "ipRules": [],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": false,
+                "encryption": {
+                    "services": {
+                        "file": {
+                            "enabled": true
+                        },
+                        "blob": {
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                }
+            }
+        },
+        {
+            "comments": "App service that will host the function app, by default it is set to a consumption plan.",
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2016-09-01",
+            "name": "[parameters('serverfarms_consumption_name')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Y1",
+                "tier": "Dynamic",
+                "size": "Y1",
+                "family": "Y",
+                "capacity": 0
+            },
+            "kind": "functionapp",
+            "properties": {
+                "name": "[parameters('serverfarms_consumption_name')]",
+                "perSiteScaling": false,
+                "reserved": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2016-08-01",
+            "name": "[parameters('sales_func_app_name')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "[concat('hidden-related:/subscriptions/', subscription().id, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Web/serverfarms/', parameters('serverfarms_consumption_name'))]": "empty"
+            },
+            "kind": "functionapp",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_consumption_name'))]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storage_acct_name'))]"
+            ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "serverFarmId": "[concat(subscription().id, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Web/serverfarms/', parameters('serverfarms_consumption_name'))]",
+                "clientAffinityEnabled": true,
+                "siteConfig":{
+                    "appSettings":[
+                        {
+                            "name":"FUNCTIONS_WORKER_RUNTIME",
+                            "value":"dotnet"
+                        },
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[reference(concat('microsoft.insights/components/', parameters('func_app_insights_name'))).InstrumentationKey]"
+                        },
+                        {
+                            "name": "AzureWebJobsStorage",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storage_acct_name'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storage_acct_name')),'2019-04-01').keys[0].value)]"
+                        },
+                        {
+                            "name": "FUNCTIONS_EXTENSION_VERSION",
+                            "value": "~3"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storage_acct_name'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storage_acct_name')),'2019-04-01').keys[0].value)]"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTSHARE",
+                            "value": "[parameters('sales_func_app_name')]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/hostNameBindings",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sales_func_app_name'), '/', parameters('sales_func_app_name'), '.azurewebsites.net')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sales_func_app_name'))]"
+            ],
+            "properties": {
+                "siteName": "[parameters('sales_func_app_name')]",
+                "hostNameType": "Verified"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2016-08-01",
+            "name": "[parameters('production_func_app_name')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "[concat('hidden-related:/subscriptions/', subscription().id, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Web/serverfarms/', parameters('serverfarms_consumption_name'))]": "empty"
+            },
+            "kind": "functionapp",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_consumption_name'))]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storage_acct_name'))]"
+            ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "serverFarmId": "[concat(subscription().id, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Web/serverfarms/', parameters('serverfarms_consumption_name'))]",
+                "clientAffinityEnabled": true,
+                "siteConfig":{
+                    "appSettings":[
+                        {
+                            "name":"FUNCTIONS_WORKER_RUNTIME",
+                            "value":"dotnet"
+                        },
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[reference(concat('microsoft.insights/components/', parameters('func_app_insights_name'))).InstrumentationKey]"
+                        },
+                        {
+                            "name": "AzureWebJobsStorage",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storage_acct_name'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storage_acct_name')),'2019-04-01').keys[0].value)]"
+                        },
+                        {
+                            "name": "FUNCTIONS_EXTENSION_VERSION",
+                            "value": "~3"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storage_acct_name'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storage_acct_name')),'2019-04-01').keys[0].value)]"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTSHARE",
+                            "value": "[parameters('production_func_app_name')]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/hostNameBindings",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('production_func_app_name'), '/', parameters('production_func_app_name'), '.azurewebsites.net')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('production_func_app_name'))]"
+            ],
+            "properties": {
+                "siteName": "[parameters('production_func_app_name')]",
+                "hostNameType": "Verified"
+            }
+        },
+        {
+            "type": "microsoft.insights/components",
+            "apiVersion": "2015-05-01",
+            "name": "[parameters('func_app_insights_name')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "[concat('hidden-link:/subscriptions/', subscription().id, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Web/sites/', parameters('sales_func_app_name'))]": "Resource"
+            },
+            "kind": "web",
+            "properties": {
+                "Application_Type":"web"
+            }
+        }
+    ]
+}

@@ -1,0 +1,21 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "serverfarms_consumption_name": {
+            "value": "ar-scus-funcs-asp-dev"
+        },
+        "func_app_insights_name": {
+            "value": "ar-scus-funcs-ai-dev"
+        },
+        "sales_func_app_name":{
+            "value": "ar-scus-salesapi-fa-dev" 
+        },
+        "production_func_app_name":{
+            "value": "ar-scus-productionapi-fa-dev" 
+        },
+        "storage_acct_name":{
+            "value":"arfuncationappsdev001"
+        }
+    }
+}

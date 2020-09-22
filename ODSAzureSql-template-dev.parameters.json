@@ -1,0 +1,27 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "servers_sql_server_name": {
+            "value": "ar-sql-ods-dev"
+        },
+        "storageAccount_sqlserver_name": {
+            "value": "sqlsrvrenterprisedev"
+        },
+        "sqlAdminLogin": {
+            "value": "loginAdmin"
+        },
+        "enterpriseKVName": {
+            "value": "ar-enterprise-kv-dev"
+        },
+        "sqlDbSKUServiceObjective": {
+            "value": "S0"
+        },
+        "sqlDbSKUEdition": {
+            "value": "Standard"
+        },
+        "location": {
+            "value": "southcentralus"
+        }
+    }
+}

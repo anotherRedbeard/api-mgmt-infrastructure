@@ -1,0 +1,112 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vaults_enterprise_kv_sbx_name": {
+            "type": "string"
+        },
+        "kv_sku_name": {
+            "type": "string",
+            "allowedValues": ["Standard","Premium"]
+        },
+        "kv_secrets_sql_admin_pwd_name":{
+            "type":"string"
+        },
+        "kv_secrets_sql_admin_pwd_value":{
+            "type":"securestring"
+        },
+        "ad_tenant_id": {
+            "type":"securestring"
+        },
+        "ad_object_id_kv_access": {
+            "type":"securestring"
+        },
+        "location": {
+            "type":"string"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "comments":"This is the keyvault were keys/secrets/certs will be stored",
+            "type": "Microsoft.KeyVault/vaults",
+            "apiVersion": "2016-10-01",
+            "name": "[parameters('vaults_enterprise_kv_sbx_name')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "sku": {
+                    "family": "A",
+                    "name": "[parameters('kv_sku_name')]"
+                },
+                "tenantId": "[parameters('ad_tenant_id')]",
+                "accessPolicies": [
+                    {
+                        "tenantId": "[parameters('ad_tenant_id')]",
+                        "objectId": "[parameters('ad_object_id_kv_access')]",
+                        "permissions": {
+                            "keys": [
+                                "Get",
+                                "List",
+                                "Update",
+                                "Create",
+                                "Import",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore"
+                            ],
+                            "secrets": [
+                                "Get",
+                                "List",
+                                "Set",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore"
+                            ],
+                            "certificates": [
+                                "Get",
+                                "List",
+                                "Update",
+                                "Create",
+                                "Import",
+                                "Delete",
+                                "Recover",
+                                "ManageContacts",
+                                "ManageIssuers",
+                                "GetIssuers",
+                                "ListIssuers",
+                                "SetIssuers",
+                                "DeleteIssuers"
+                            ]
+                        }
+                    }
+                ],
+                "enabledForDeployment": false,
+                "enabledForDiskEncryption": false,
+                "enabledForTemplateDeployment": true
+            }
+        },
+        {
+            "comments":"Secret for the admin password for sqlServer",
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "apiVersion": "2016-10-01",
+            "name": "[concat(parameters('vaults_enterprise_kv_sbx_name'), '/',parameters('kv_secrets_sql_admin_pwd_name'))]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('vaults_enterprise_kv_sbx_name'))]"
+            ],
+            "properties": {
+                "value": "[parameters('kv_secrets_sql_admin_pwd_value')]",
+                "contentType": "",
+                "attributes": {
+                    "enabled": true
+                }
+            },
+            "copy": {
+                "name":"secretcopy",
+                "count":1
+            }
+        }
+    ]
+}
