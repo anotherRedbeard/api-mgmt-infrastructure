@@ -31,6 +31,12 @@
             "metadata": {
                 "description":"The name of the storage account you want to use with the function app"
             }
+        },
+        "enterprise_key_vault_name": {
+            "type":"string",
+            "metadata": {
+                "description":"The name of the keyvault that i am using to pull the connection string from"
+            }
         }
     },
     "variables": { },
@@ -133,6 +139,10 @@
                         {
                             "name": "WEBSITE_CONTENTSHARE",
                             "value": "[parameters('sales_func_app_name')]"
+                        },
+                        {
+                            "name":"SalesConnectionString",
+                            "value":"[concat('@Microsoft.KeyVault(SecretUri=https://',parameters('enterprise_key_vault_name'),'.vault.azure.net/secrets/ODSConnectionString/b1f9d51123d74eb99029090d494e3515)')]"
                         }
                     ]
                 }

@@ -16,6 +16,9 @@
         },
         "storage_acct_name":{
             "value":"arfuncationappsdev001"
+        },
+        "enterprise_key_vault_name":{
+            "value": "ar-enterprise-kv-dev" 
         }
     }
 }
