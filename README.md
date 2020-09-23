@@ -123,3 +123,16 @@ This is the deployment sequence for a full deployment, if you are just doing a p
         user@Azure:~$ az group create -g ar-scus-apis-rg-dev --location southcentralus
         user@Azure:~$ az deployment group create -g ar-scus-apis-rg-dev --template-file Api-template.json  --parameters Api-template-dev.parameters.json
         ```
+
+    4. Once the template is deployed you will need to allow the system identity that was created to have access to Azure Sql Server and the enterprise key vault.  Here are the steps to follow to do that.
+
+       1. Updating the enterprise key vault
+            1. Go to the enterprise key vault (in our case it is named ar-enterprise-kv-dev)
+            2. Click on 'Access Policies' under the Settings blade
+            3. Click '+ Add Access Policy', which will open up the Add access policy screen
+                  1. Select the permissions you want or use a template
+                  2. Select the principal (in this case it will be the principals for each of the functions)
+                  3. Hit the Add button, then click the Save button
+       2. Updating Azure Sql
+            1. Login to the ODS database using an admin account and run the script found at /Database/ODS/ODSCreateUserRoles-dev.sql.  Note that the users you are creating are the same name as the Azure functions, this is the name of the managed identity in Azure AD.  If the identity is system-assigned it is always the same as the name of the App Service.  See <https://docs.microsoft.com/en-us/azure/app-service/app-service-web-tutorial-connect-msi#grant-permissions-to-managed-identity> for more details on this.
+
