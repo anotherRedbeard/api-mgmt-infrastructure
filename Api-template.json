@@ -205,6 +205,10 @@
                         {
                             "name": "WEBSITE_CONTENTSHARE",
                             "value": "[parameters('production_func_app_name')]"
+                        },
+                        {
+                            "name":"ProductionConnectionString",
+                            "value":"[concat('@Microsoft.KeyVault(SecretUri=https://',parameters('enterprise_key_vault_name'),'.vault.azure.net/secrets/ODSConnectionString/b1f9d51123d74eb99029090d494e3515)')]"
                         }
                     ]
                 }
