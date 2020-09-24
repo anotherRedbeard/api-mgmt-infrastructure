@@ -142,7 +142,7 @@
                         },
                         {
                             "name":"SalesConnectionString",
-                            "value":"[concat('@Microsoft.KeyVault(SecretUri=https://',parameters('enterprise_key_vault_name'),'.vault.azure.net/secrets/ODSConnectionString/b1f9d51123d74eb99029090d494e3515)')]"
+                            "value":"[concat('@Microsoft.KeyVault(SecretUri=https://',parameters('enterprise_key_vault_name'),'.vault.azure.net/secrets/ODSConnectionString)')]"
                         }
                     ]
                 }
@@ -208,7 +208,7 @@
                         },
                         {
                             "name":"ProductionConnectionString",
-                            "value":"[concat('@Microsoft.KeyVault(SecretUri=https://',parameters('enterprise_key_vault_name'),'.vault.azure.net/secrets/ODSConnectionString/b1f9d51123d74eb99029090d494e3515)')]"
+                            "value":"[concat('@Microsoft.KeyVault(SecretUri=https://',parameters('enterprise_key_vault_name'),'.vault.azure.net/secrets/ODSConnectionString)')]"
                         }
                     ]
                 }

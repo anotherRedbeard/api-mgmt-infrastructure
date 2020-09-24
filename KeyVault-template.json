@@ -107,6 +107,48 @@
                 "name":"secretcopy",
                 "count":1
             }
+        },
+        {
+            "comments":"Secret for the ad tenant id",
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "apiVersion": "2016-10-01",
+            "name": "[concat(parameters('vaults_enterprise_kv_sbx_name'), '/ad-tenant-id')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('vaults_enterprise_kv_sbx_name'))]"
+            ],
+            "properties": {
+                "value": "[parameters('ad_tenant_id')]",
+                "contentType": "",
+                "attributes": {
+                    "enabled": true
+                }
+            },
+            "copy": {
+                "name":"secretcopy",
+                "count":1
+            }
+        },
+        {
+            "comments":"Secret for the ad admin login sid",
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "apiVersion": "2016-10-01",
+            "name": "[concat(parameters('vaults_enterprise_kv_sbx_name'), '/sqlserver-ad-admin-login-sid')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('vaults_enterprise_kv_sbx_name'))]"
+            ],
+            "properties": {
+                "value": "[parameters('ad_object_id_kv_access')]",
+                "contentType": "",
+                "attributes": {
+                    "enabled": true
+                }
+            },
+            "copy": {
+                "name":"secretcopy",
+                "count":1
+            }
         }
     ]
 }
